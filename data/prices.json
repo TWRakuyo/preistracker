@@ -1,14 +1,87 @@
 {
-  "updated": "2026-10-29T12:00+00:00",
-  "errors": [],
-  "monitors": [
-    {"id":"g60sf","name":"Samsung Odyssey G60SF","spec":"26,5 Zoll, QD-OLED, WQHD, 500 Hz, matt","target":500,"pin":true,"links":{"Samsung.de":"https://www.samsung.com/de/monitors/gaming/odyssey-oled-g6-g60sf-27-inch-500hz-oled-qhd-ls27fg602suxen/","Check24":"https://preisvergleich.check24.de/"}},
-    {"id":"mag272","name":"MSI MAG 272QP QD-OLED X50","spec":"26,5 Zoll, QD-OLED, WQHD, 500 Hz","target":599,"pin":null,"links":{"MSI Shop":"https://de-store.msi.com/products/mag-272qp-qd-oled-x50-gaming-monitor"}},
-    {"id":"lg790","name":"LG UltraGear 27GX790B-B","spec":"26,5 Zoll, Tandem-WOLED, WQHD, 540 Hz","target":600,"pin":null,"links":{"MediaMarkt":"https://www.mediamarkt.de/","Amazon":"https://www.amazon.de/dp/B0GPFCQZC9"}}
-  ],
-  "history": {
-    "g60sf": {"Samsung.de": [["2026-08-06", 569]], "Check24": [["2026-10-29", 549]]},
-    "mag272": {"MSI Shop": [["2026-08-15", 629]]},
-    "lg790": {"MediaMarkt": [["2026-10-17", 699.99]], "Amazon": [["2026-10-17", 699.99]]}
+ "updated": "2026-10-29T01:07+00:00",
+ "errors": [
+  "LG UltraGear 27GX790B-B / MediaMarkt: 403 Client Error: Forbidden for url: https://www.mediamarkt.de/de/product/_lg-ultrageartm-monitor-27gx790b-baeu-27-zoll-qhd-gaming-monitor-002-ms-reaktionszeit-540-hz-3036330.html",
+  "LG UltraGear 27GX790B-B / Amazon: kein Preis gefunden (Selektor in monitors.json setzen)"
+ ],
+ "monitors": [
+  {
+   "id": "g60sf",
+   "name": "Samsung Odyssey G60SF",
+   "spec": "26,5 Zoll, QD-OLED, WQHD, 500 Hz, matt",
+   "target": 500,
+   "pin": true,
+   "links": {
+    "Samsung.de": "https://www.samsung.com/de/monitors/gaming/odyssey-oled-g6-g60sf-27-inch-500hz-oled-qhd-ls27fg602suxen/",
+    "Check24": "https://preisvergleich.check24.de/ul/gaming-monitore/1CU1CSNX6RC0F-samsung-odyssey-g60sf-27-zoll-oled-gaming-monitor-mit-2560-x-1440-pixeln-500-hz-003-ms-reaktionszeit-nvidia-g-sync-amd-freesync-premium-pro-glare-free.html"
+   }
+  },
+  {
+   "id": "mag272",
+   "name": "MSI MAG 272QP QD-OLED X50",
+   "spec": "26,5 Zoll, QD-OLED, WQHD, 500 Hz",
+   "target": 599,
+   "pin": null,
+   "links": {
+    "MSI Shop": "https://de-store.msi.com/products/mag-272qp-qd-oled-x50-gaming-monitor"
+   }
+  },
+  {
+   "id": "lg790",
+   "name": "LG UltraGear 27GX790B-B",
+   "spec": "26,5 Zoll, Tandem-WOLED, WQHD, 540 Hz",
+   "target": 600,
+   "pin": null,
+   "links": {
+    "MediaMarkt": "https://www.mediamarkt.de/de/product/_lg-ultrageartm-monitor-27gx790b-baeu-27-zoll-qhd-gaming-monitor-002-ms-reaktionszeit-540-hz-3036330.html",
+    "Amazon": "https://www.amazon.de/dp/B0GPFCQZC9"
+   }
   }
+ ],
+ "history": {
+  "g60sf": {
+   "Samsung.de": [
+    [
+     "2026-08-06",
+     569
+    ],
+    [
+     "2026-10-29",
+     569.0
+    ]
+   ],
+   "Check24": [
+    [
+     "2026-10-29",
+     549.99
+    ]
+   ]
+  },
+  "mag272": {
+   "MSI Shop": [
+    [
+     "2026-08-15",
+     629
+    ],
+    [
+     "2026-10-29",
+     699.0
+    ]
+   ]
+  },
+  "lg790": {
+   "MediaMarkt": [
+    [
+     "2026-10-17",
+     699.99
+    ]
+   ],
+   "Amazon": [
+    [
+     "2026-10-17",
+     699.99
+    ]
+   ]
+  }
+ }
 }
