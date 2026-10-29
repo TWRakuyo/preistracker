@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monitor-Preistracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#eef1f5;--panel:#fff;--ink:#14202e;--mute:#5d6b7c;--line:#d9dfe7;--acc:#2447f5;--good:#0b7a5a;--goodbg:#d8f3ea;--bad:#b3261e;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d131b;--panel:#161e29;--ink:#e8edf3;--mute:#93a1b3;--line:#283443;--acc:#7b93ff;--good:#4fd1a5;--goodbg:#10382d;--bad:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d131b;--panel:#161e29;--ink:#e8edf3;--mute:#93a1b3;--line:#283443;--acc:#7b93ff;--good:#4fd1a5;--goodbg:#10382d;--bad:#ff8a80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:920px;margin:0 auto;padding:22px 16px 56px}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin:0 0 2px}
+h2{font-size:1.25rem;font-weight:800;margin:0;letter-spacing:-.01em}
+.mute{color:var(--mute);font-size:.92rem;margin:0}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.sum{font-weight:600;color:var(--good)}
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:22px}
+.big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:14px 0 4px}
+.price{font-size:clamp(2.6rem,9vw,4rem);font-weight:800;letter-spacing:-.04em;line-height:1}
+.down{color:var(--good);font-weight:600}.up{color:var(--bad);font-weight:600}
+.badge{display:inline-block;background:var(--goodbg);color:var(--good);border-radius:999px;padding:2px 10px;font-size:.85rem;font-weight:600}
+.chart{width:100%;height:auto;display:block;margin:12px 0;overflow:visible}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.95rem}
+th{text-align:left;font-weight:600;color:var(--mute);font-size:.85rem}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line)}
+td.n,th.n{text-align:right}
+a{color:var(--acc);font-weight:600}
+.ledger{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row+.row{border-top:1px solid var(--line)}
+.rowhead{all:unset;box-sizing:border-box;display:grid;grid-template-columns:1fr 120px auto;gap:14px;align-items:center;width:100%;padding:12px 16px;cursor:pointer}
+.rowhead:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.rowhead .chart{margin:0}
+.rp{text-align:right;font-weight:800;font-size:1.1rem}
+.detail{padding:0 16px 16px;border-top:1px dashed var(--line)}
+details.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:14px}
+summary{cursor:pointer;font-weight:600}
+.empty{color:var(--mute);padding:8px 0}
+@media (max-width:560px){.rowhead{grid-template-columns:1fr auto}.rowhead .chart{display:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div><h1>Monitor-Preistracker</h1><p class="mute" id="upd">Lade Preise …</p></div>
+    <div class="sum" id="sum"></div>
+  </div>
+  <div id="app"></div>
+  <div id="errs"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const COL=['var(--acc)','#d9730d','#0b9c7a','#b0408f','#7a8699'];
+const eur=n=>n.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+const fd=d=>{const a=d.split('-');return a[2]+'.'+a[1]+'.'+a[0]};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const T=d=>Date.parse(d);
+let D,open=new Set();
+
+fetch('data/prices.json?'+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{D=d;render()})
+ .catch(()=>{$('#upd').textContent='';$('#app').innerHTML='<p class="empty">data/prices.json konnte nicht geladen werden. Öffne die Seite über GitHub Pages oder lokal mit „python -m http.server“.</p>'});
+
+function model(m){
+  const h=D.history[m.id]||{};
+  const shops=Object.keys(h).map((name,i)=>{const pts=h[name].slice().sort((a,b)=>a[0]<b[0]?-1:1);
+    return{name,pts,col:COL[i%COL.length],cur:pts[pts.length-1]||null,prev:pts[pts.length-2]||null,url:(m.links||{})[name]}});
+  const latest=Math.max(0,...shops.filter(s=>s.cur).map(s=>T(s.cur[0])));
+  shops.forEach(s=>{s.fresh=s.cur&&(latest-T(s.cur[0]))<=3*864e5});
+  const days={};shops.forEach(s=>s.pts.forEach(([d,p])=>{days[d]=Math.min(days[d]??1e9,p)}));
+  const pts=Object.entries(days).sort((a,b)=>a[0]<b[0]?-1:1);
+  const best=shops.filter(s=>s.fresh).sort((a,b)=>a.cur[1]-b.cur[1])[0]||null;
+  return{shops,pts,best,lo:pts.length?Math.min(...pts.map(x=>x[1])):0,hi:pts.length?Math.max(...pts.map(x=>x[1])):0};
+}
+function chart(series,target,w,h,dots){
+  const all=series.flatMap(s=>s.pts);if(!all.length)return'';
+  const v=all.map(x=>x[1]);if(target)v.push(target);
+  let lo=Math.min(...v),hi=Math.max(...v);if(hi===lo){hi+=10;lo-=10}const pd=(hi-lo)*.15;lo-=pd;hi+=pd;
+  const ts=all.map(x=>T(x[0])),t0=Math.min(...ts),sp=Math.max(Math.max(...ts)-t0,1);
+  const px=d=>sp===1?w/2:8+(T(d)-t0)/sp*(w-16),py=p=>h-6-(p-lo)/(hi-lo)*(h-12);
+  let s='<svg viewBox="0 0 '+w+' '+h+'" class="chart" role="img" aria-label="Preisverlauf">';
+  if(target){const y=py(target).toFixed(1);s+='<line x1="0" x2="'+w+'" y1="'+y+'" y2="'+y+'" stroke="var(--good)" stroke-dasharray="4 4" stroke-width="1.5"/>'}
+  series.forEach(se=>{
+    if(se.pts.length>1)s+='<polyline fill="none" stroke="'+se.col+'" stroke-width="'+(dots?2.2:2.5)+'" stroke-linejoin="round" points="'+se.pts.map(x=>px(x[0]).toFixed(1)+','+py(x[1]).toFixed(1)).join(' ')+'"/>';
+    se.pts.forEach((x,i)=>{if(dots||i===se.pts.length-1)s+='<circle cx="'+px(x[0]).toFixed(1)+'" cy="'+py(x[1]).toFixed(1)+'" r="'+(dots?3.5:3)+'" fill="'+se.col+'"><title>'+(se.name?esc(se.name)+', ':'')+fd(x[0])+': '+eur(x[1])+'</title></circle>'});
+  });
+  return s+'</svg>';
+}
+function status(m,b){
+  if(!b)return'<span class="mute">Noch kein aktueller Preis</span>';
+  if(!m.target)return'<span class="mute">Kein Zielpreis gesetzt</span>';
+  return b.cur[1]<=m.target?'<span class="badge">Zielpreis erreicht</span>':'<span class="mute">Noch '+eur(b.cur[1]-m.target)+' bis zum Zielpreis von '+eur(m.target)+'</span>';
+}
+function delta(M){const p=M.pts;if(p.length<2)return'';const d=p[p.length-1][1]-p[p.length-2][1];
+  return d<0?'<span class="down">▼ '+eur(-d)+' zum vorherigen Eintrag</span>':d>0?'<span class="up">▲ '+eur(d)+' zum vorherigen Eintrag</span>':'<span class="mute">unverändert</span>'}
+function shopTable(M){
+  return'<table><tr><th>Anbieter</th><th class="n">Aktuell</th><th class="n">Änderung</th><th>Stand</th><th></th></tr>'+
+  M.shops.slice().sort((a,b)=>(a.cur?a.cur[1]:1e9)-(b.cur?b.cur[1]:1e9)).map(s=>{
+    const d=s.cur&&s.prev?s.cur[1]-s.prev[1]:0;
+    return'<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+s.col+';margin-right:6px"></i>'+esc(s.name)+'</td><td class="n"><b>'+(s.cur?eur(s.cur[1]):'–')+'</b></td><td class="n '+(d<0?'down':d>0?'up':'')+'">'+(d?(d<0?'▼ ':'▲ ')+eur(Math.abs(d)):'–')+'</td><td class="mute">'+(s.cur?fd(s.cur[0])+(s.fresh?'':' (veraltet)'):'')+'</td><td>'+(s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener">Zum Angebot</a>':'')+'</td></tr>'}).join('')+'</table>';
+}
+function legend(M){return'<div class="legend">'+M.shops.map(s=>'<span><i style="background:'+s.col+'"></i>'+esc(s.name)+'</span>').join('')+'</div>'}
+function hero(m){const M=model(m),b=M.best;
+  return'<section class="hero"><h2>'+esc(m.name)+'</h2><p class="mute">'+esc(m.spec||'')+'</p>'+
+  (b?'<div class="big"><span class="price">'+eur(b.cur[1])+'</span>'+delta(M)+'</div><p style="margin:0 0 6px">'+status(m,b)+'</p><p class="mute">Günstigster Anbieter: '+esc(b.name)+', Stand '+fd(b.cur[0])+'</p>'+
+   chart(M.shops,m.target,640,180,true)+legend(M)+'<p class="mute" style="margin-top:10px">Tiefstpreis seit Beginn: <b>'+eur(M.lo)+'</b>, Höchstpreis: <b>'+eur(M.hi)+'</b></p>'+shopTable(M)
+  :'<p class="empty">Noch keine Preise. Starte den Workflow „Preise abrufen“ in GitHub Actions.</p>')+'</section>';
+}
+function row(m){const M=model(m),b=M.best,o=open.has(m.id),hit=b&&m.target&&b.cur[1]<=m.target;
+  return'<article class="row"><button class="rowhead" data-id="'+esc(m.id)+'" aria-expanded="'+o+'"><span><b>'+esc(m.name)+'</b><br><span class="mute">'+esc(m.spec||'')+'</span></span>'+
+  chart([{pts:M.pts,col:'var(--acc)'}],m.target,120,36,false)+'<span class="rp">'+(b?eur(b.cur[1]):'–')+(hit?'<br><span class="badge">Ziel erreicht</span>':'')+'</span></button>'+
+  (o?'<div class="detail">'+(b?status(m,b)+chart(M.shops,m.target,640,150,true)+legend(M)+shopTable(M):'<p class="empty">Noch keine Preise.</p>')+'</div>':'')+'</article>';
+}
+function render(){
+  const ms=D.monitors||[],pin=ms.find(m=>m.pin)||ms[0],rest=ms.filter(m=>m!==pin);
+  $('#app').innerHTML=(pin?hero(pin):'')+(rest.length?'<div class="ledger">'+rest.map(row).join('')+'</div>':'');
+  const n=ms.filter(m=>{const b=model(m).best;return b&&m.target&&b.cur[1]<=m.target}).length;
+  $('#sum').textContent=n?n+(n===1?' Monitor':' Monitore')+' unter dem Zielpreis':'';
+  $('#upd').textContent=D.updated?'Zuletzt aktualisiert: '+new Date(D.updated).toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'}):'';
+  $('#errs').innerHTML=(D.errors&&D.errors.length)?'<details class="box"><summary>'+D.errors.length+' Abruf(e) beim letzten Lauf fehlgeschlagen</summary><ul>'+D.errors.map(e=>'<li class="mute">'+esc(e)+'</li>').join('')+'</ul></details>':'';
+}
+document.addEventListener('click',e=>{const b=e.target.closest('.rowhead');if(!b)return;const id=b.dataset.id;open.has(id)?open.delete(id):open.add(id);render()});
+</script>
+</body>
+</html>
