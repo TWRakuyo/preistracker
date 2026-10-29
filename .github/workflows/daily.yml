@@ -24,5 +24,6 @@ jobs:
           git add data/prices.json
           if ! git diff --cached --quiet; then
             git commit -m "Preise vom $(date -u +%F)"
+            git pull --rebase
             git push
           fi
