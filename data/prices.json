@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-29T12:44+00:00",
+ "updated": "2026-10-30T10:14+00:00",
  "errors": [
   "LG UltraGear 27GX790B-B / MediaMarkt: 403 Client Error: Forbidden for url: https://www.mediamarkt.de/de/product/_lg-ultrageartm-monitor-27gx790b-baeu-27-zoll-qhd-gaming-monitor-002-ms-reaktionszeit-540-hz-3036330.html",
   "LG UltraGear 27GX790B-B / Amazon: kein Preis gefunden (Selektor in monitors.json setzen)"
@@ -48,11 +48,19 @@
     [
      "2026-10-29",
      569.0
+    ],
+    [
+     "2026-10-30",
+     569.0
     ]
    ],
    "Check24": [
     [
      "2026-10-29",
+     549.99
+    ],
+    [
+     "2026-10-30",
      549.99
     ]
    ]
@@ -65,6 +73,10 @@
     ],
     [
      "2026-10-29",
+     699.0
+    ],
+    [
+     "2026-10-30",
      699.0
     ]
    ]
