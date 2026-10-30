@@ -42,6 +42,13 @@ a{color:var(--acc);font-weight:600}
 details.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:14px}
 summary{cursor:pointer;font-weight:600}
 .empty{color:var(--mute);padding:8px 0}
+input{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+label{display:flex;flex-direction:column;font-size:.85rem;color:var(--mute);gap:2px;flex:1 1 110px}
+form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:10px 0}
+button.b{font:inherit;font-weight:600;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 12px;margin:2px 4px 2px 0}
+button.pri{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+button.b:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.ent{margin-top:16px;border-top:1px solid var(--line);padding-top:10px}
 @media (max-width:560px){.rowhead{grid-template-columns:1fr auto}.rowhead .chart{display:none}}
 </style>
 </head>
@@ -51,8 +58,13 @@ summary{cursor:pointer;font-weight:600}
     <div><h1>Monitor-Preistracker</h1><p class="mute" id="upd">Lade Preise …</p></div>
     <div class="sum" id="sum"></div>
   </div>
+  <p class="sum" id="msg" role="status"></p>
   <div id="app"></div>
   <div id="errs"></div>
+  <details class="box"><summary>Preise auf der Seite speichern (GitHub-Token)</summary>
+    <p class="mute" style="margin:8px 0">Damit die Seite eingetragene Preise in dein Repository schreiben darf, brauchst du einmal pro Gerät einen Token. Er wird nur in diesem Browser gespeichert. Erstellen: GitHub, Settings, Developer settings, Personal access tokens, Fine-grained tokens. Nur das Repository „preistracker“ auswählen, Berechtigung „Contents: Read and write“.</p>
+    <form id="tokf"><label>Token<input id="tok" type="password" autocomplete="off" placeholder="github_pat_…"></label><button class="b pri">Token speichern</button><button type="button" class="b" id="tokdel">Token entfernen</button></form>
+  </details>
 </main>
 <script>
 const $=s=>document.querySelector(s);
@@ -61,17 +73,19 @@ const eur=n=>n.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const fd=d=>{const a=d.split('-');return a[2]+'.'+a[1]+'.'+a[0]};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const T=d=>Date.parse(d);
-let D,open=new Set();
+let D,MAN={},open=new Set();
 
-fetch('data/prices.json?'+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{D=d;render()})
- .catch(()=>{$('#upd').textContent='';$('#app').innerHTML='<p class="empty">data/prices.json konnte nicht geladen werden. Öffne die Seite über GitHub Pages oder lokal mit „python -m http.server“.</p>'});
 
 function model(m){
-  const h=D.history[m.id]||{};
-  const shops=Object.keys(h).filter(n=>n in (m.links||{})).map((name,i)=>{const pts=h[name].slice().sort((a,b)=>a[0]<b[0]?-1:1);
-    return{name,pts,col:COL[i%COL.length],cur:pts[pts.length-1]||null,prev:pts[pts.length-2]||null,url:(m.links||{})[name]}});
-  const latest=Math.max(0,...shops.filter(s=>s.cur).map(s=>T(s.cur[0])));
-  shops.forEach(s=>{s.fresh=s.cur&&(latest-T(s.cur[0]))<=3*864e5});
+  const h=D.history[m.id]||{},mn=MAN[m.id]||{},L=m.links||{},src=[];
+  Object.keys(h).filter(n=>n in L).forEach(n=>src.push([n,h[n],L[n],false]));
+  Object.keys(mn).forEach(n=>src.push([n,mn[n].prices||[],mn[n].url,true]));
+  const shops=src.map(([name,raw,url,man],i)=>{const pts=raw.slice().sort((a,b)=>a[0]<b[0]?-1:1);
+    return{name,pts,col:COL[i%COL.length],cur:pts[pts.length-1]||null,prev:pts[pts.length-2]||null,url,man,since:pts.length?pts[pts.length-1][0]:null}});
+  const auto=shops.filter(s=>!s.man&&s.cur),latestISO=auto.map(s=>s.cur[0]).sort().pop();
+  const latest=Math.max(0,...auto.map(s=>T(s.cur[0])));
+  shops.forEach(s=>{if(s.man&&s.cur&&latestISO&&s.cur[0]<latestISO){s.pts=s.pts.concat([[latestISO,s.cur[1]]]);s.cur=s.pts[s.pts.length-1]}
+    s.fresh=s.man?!!s.cur:!!s.cur&&(latest-T(s.cur[0]))<=3*864e5});
   const days={};shops.forEach(s=>s.pts.forEach(([d,p])=>{days[d]=Math.min(days[d]??1e9,p)}));
   const pts=Object.entries(days).sort((a,b)=>a[0]<b[0]?-1:1);
   const best=shops.filter(s=>s.fresh).sort((a,b)=>a.cur[1]-b.cur[1])[0]||null;
@@ -102,19 +116,19 @@ function shopTable(M){
   return'<table><tr><th>Anbieter</th><th class="n">Aktuell</th><th class="n">Änderung</th><th>Stand</th><th></th></tr>'+
   M.shops.slice().sort((a,b)=>(a.cur?a.cur[1]:1e9)-(b.cur?b.cur[1]:1e9)).map(s=>{
     const d=s.cur&&s.prev?s.cur[1]-s.prev[1]:0;
-    return'<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+s.col+';margin-right:6px"></i>'+esc(s.name)+'</td><td class="n"><b>'+(s.cur?eur(s.cur[1]):'–')+'</b></td><td class="n '+(d<0?'down':d>0?'up':'')+'">'+(d?(d<0?'▼ ':'▲ ')+eur(Math.abs(d)):'–')+'</td><td class="mute">'+(s.cur?fd(s.cur[0])+(s.fresh?'':' (veraltet)'):'')+'</td><td>'+(s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener">Zum Angebot</a>':'')+'</td></tr>'}).join('')+'</table>';
+    return'<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+s.col+';margin-right:6px"></i>'+esc(s.name)+'</td><td class="n"><b>'+(s.cur?eur(s.cur[1]):'–')+'</b></td><td class="n '+(d<0?'down':d>0?'up':'')+'">'+(d?(d<0?'▼ ':'▲ ')+eur(Math.abs(d)):'–')+'</td><td class="mute">'+(s.cur?(s.man?fd(s.since)+' (manuell)':fd(s.cur[0])+(s.fresh?'':' (veraltet)')):'')+'</td><td>'+(s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener">Zum Angebot</a>':'')+'</td></tr>'}).join('')+'</table>';
 }
 function legend(M){return'<div class="legend">'+M.shops.map(s=>'<span><i style="background:'+s.col+'"></i>'+esc(s.name)+'</span>').join('')+'</div>'}
 function hero(m){const M=model(m),b=M.best;
   return'<section class="hero"><h2>'+esc(m.name)+'</h2><p class="mute">'+esc(m.spec||'')+'</p>'+
-  (b?'<div class="big"><span class="price">'+eur(b.cur[1])+'</span>'+delta(M)+'</div><p style="margin:0 0 6px">'+status(m,b)+'</p><p class="mute">Günstigster Anbieter: '+esc(b.name)+', Stand '+fd(b.cur[0])+'</p>'+
+  (b?'<div class="big"><span class="price">'+eur(b.cur[1])+'</span>'+delta(M)+'</div><p style="margin:0 0 6px">'+status(m,b)+'</p><p class="mute">Günstigster Anbieter: '+esc(b.name)+', Stand '+(b.man?fd(b.since)+' (manuell)':fd(b.cur[0]))+'</p>'+
    chart(M.shops,m.target,640,180,true)+legend(M)+'<p class="mute" style="margin-top:10px">Tiefstpreis seit Beginn: <b>'+eur(M.lo)+'</b>, Höchstpreis: <b>'+eur(M.hi)+'</b></p>'+shopTable(M)
-  :'<p class="empty">Noch keine Preise. Starte den Workflow „Preise abrufen“ in GitHub Actions.</p>')+'</section>';
+  :'<p class="empty">Noch keine Preise. Starte den Workflow „Preise abrufen“ in GitHub Actions.</p>')+entry(m)+'</section>';
 }
 function row(m){const M=model(m),b=M.best,o=open.has(m.id),hit=b&&m.target&&b.cur[1]<=m.target;
   return'<article class="row"><button class="rowhead" data-id="'+esc(m.id)+'" aria-expanded="'+o+'"><span><b>'+esc(m.name)+'</b><br><span class="mute">'+esc(m.spec||'')+'</span></span>'+
   chart([{pts:M.pts,col:'var(--acc)'}],m.target,120,36,false)+'<span class="rp">'+(b?eur(b.cur[1]):'–')+(hit?'<br><span class="badge">Ziel erreicht</span>':'')+'</span></button>'+
-  (o?'<div class="detail">'+(b?status(m,b)+chart(M.shops,m.target,640,150,true)+legend(M)+shopTable(M):'<p class="empty">Noch keine Preise.</p>')+'</div>':'')+'</article>';
+  (o?'<div class="detail">'+(b?status(m,b)+chart(M.shops,m.target,640,150,true)+legend(M)+shopTable(M):'<p class="empty">Noch keine Preise.</p>')+entry(m)+'</div>':'')+'</article>';
 }
 function render(){
   const ms=D.monitors||[],pin=ms.find(m=>m.pin)||ms[0],rest=ms.filter(m=>m!==pin);
@@ -125,6 +139,47 @@ function render(){
   $('#errs').innerHTML=(D.errors&&D.errors.length)?'<details class="box"><summary>'+D.errors.length+' Abruf(e) beim letzten Lauf fehlgeschlagen</summary><ul>'+D.errors.map(e=>'<li class="mute">'+esc(e)+'</li>').join('')+'</ul></details>':'';
 }
 document.addEventListener('click',e=>{const b=e.target.closest('.rowhead');if(!b)return;const id=b.dataset.id;open.has(id)?open.delete(id):open.add(id);render()});
+
+const today=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
+const REPO=(()=>{const hn=location.hostname,r=location.pathname.split('/')[1];return hn.endsWith('.github.io')&&r?{o:hn.split('.')[0],r}:null})();
+const tok=()=>{try{return localStorage.getItem('ghTok')||''}catch(e){return''}};
+const say=t=>{$('#msg').textContent=t};
+const API=()=>'https://api.github.com/repos/'+REPO.o+'/'+REPO.r+'/contents/data/manual.json';
+const hd=()=>({Authorization:'Bearer '+tok(),Accept:'application/vnd.github+json'});
+async function ghRead(){const r=await fetch(API()+'?t='+Date.now(),{headers:hd()});if(r.status===404)return{sha:undefined,data:{}};if(!r.ok)throw new Error('GitHub meldet '+r.status);
+  const j=await r.json();return{sha:j.sha,data:JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))))}}
+async function ghWrite(data,sha,msg){const body={message:msg,content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,1)))),sha};
+  const r=await fetch(API(),{method:'PUT',headers:hd(),body:JSON.stringify(body)});if(!r.ok)throw new Error('GitHub meldet '+r.status)}
+async function edit(fn,msg){
+  if(!REPO||!tok()){say('Bitte zuerst unten den GitHub-Token einrichten (nur auf der GitHub-Pages-Adresse möglich).');return}
+  say('Speichere …');
+  try{const{sha,data}=await ghRead();fn(data);await ghWrite(data,sha,msg);MAN=data;render();say('Gespeichert.')}
+  catch(e){say('Speichern fehlgeschlagen: '+e.message+'. Prüfe den Token und seine Berechtigung.')}
+}
+function entry(m){const mn=MAN[m.id]||{},names=Object.keys(mn),id=esc(m.id);
+  return'<div class="ent"><b>Preis eintragen</b><form data-f="man" data-id="'+id+'"><label>Anbieter<input name="s" list="dl-'+id+'" value="'+esc(names[0]||'Amazon')+'" required><datalist id="dl-'+id+'">'+names.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist></label>'
+  +'<label>Preis (€)<input name="p" type="number" step="0.01" min="0" required></label><label>Datum<input name="d" type="date" value="'+today()+'"></label><label>Link (optional)<input name="u" type="url" placeholder="https://…"></label><button class="b pri">Speichern</button></form>'
+  +names.filter(n=>(mn[n].prices||[]).length).map(n=>'<button type="button" class="b" data-undo="'+esc(n)+'" data-id="'+id+'">'+esc(n)+': letzten Eintrag löschen</button>').join('')+'</div>'}
+async function loadMan(){
+  try{if(REPO&&tok()){MAN=(await ghRead()).data;return}}catch(e){say('Token ungültig oder ohne Berechtigung. Zeige gespeicherte Daten.')}
+  try{const r=await fetch('data/manual.json?'+Date.now());MAN=r.ok?await r.json():{}}catch(e){MAN={}}
+}
+async function init(){
+  try{const r=await fetch('data/prices.json?'+Date.now());if(!r.ok)throw 0;D=await r.json()}
+  catch(e){$('#upd').textContent='';$('#app').innerHTML='<p class="empty">data/prices.json konnte nicht geladen werden. Öffne die Seite über GitHub Pages oder lokal mit „python -m http.server“.</p>';return}
+  await loadMan();render();
+}
+document.addEventListener('submit',e=>{const f=e.target;e.preventDefault();
+  if(f.id==='tokf'){const v=$('#tok').value.trim();try{if(v)localStorage.setItem('ghTok',v)}catch(_){}$('#tok').value='';say(v?'Token gespeichert.':'Kein Token eingegeben.');if(v)loadMan().then(render);return}
+  if(f.dataset.f!=='man')return;
+  const d=new FormData(f),id=f.dataset.id,s=String(d.get('s')).trim(),p=parseFloat(d.get('p')),dt=d.get('d')||today(),u=String(d.get('u')||'').trim();
+  if(!s||!(p>0))return;
+  edit(x=>{const o=x[id]=x[id]||{},q=o[s]=o[s]||{url:'',prices:[]};if(u)q.url=u;q.prices=(q.prices||[]).filter(r=>r[0]!==dt);q.prices.push([dt,p])},'Preis '+s+': '+p+' EUR')});
+document.addEventListener('click',e=>{
+  if(e.target.id==='tokdel'){try{localStorage.removeItem('ghTok')}catch(_){}say('Token entfernt.');return}
+  const b=e.target.closest('[data-undo]');if(!b)return;const id=b.dataset.id,s=b.dataset.undo;
+  edit(x=>{const q=((x[id]||{})[s]||{}).prices;if(q&&q.length){q.sort((a,c)=>a[0]<c[0]?-1:1);q.pop()}},'Letzten Preis bei '+s+' gelöscht')});
+init();
 </script>
 </body>
 </html>
