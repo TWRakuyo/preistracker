@@ -1,7 +1,8 @@
 name: Preise abrufen
 on:
   schedule:
-    - cron: "0 6 * * *"   # täglich 06:00 UTC
+    - cron: "17 5 * * *"
+    - cron: "43 11 * * *"
   workflow_dispatch:       # manuell startbar
 permissions:
   contents: write
