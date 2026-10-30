@@ -68,7 +68,7 @@ fetch('data/prices.json?'+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}
 
 function model(m){
   const h=D.history[m.id]||{};
-  const shops=Object.keys(h).map((name,i)=>{const pts=h[name].slice().sort((a,b)=>a[0]<b[0]?-1:1);
+  const shops=Object.keys(h).filter(n=>n in (m.links||{})).map((name,i)=>{const pts=h[name].slice().sort((a,b)=>a[0]<b[0]?-1:1);
     return{name,pts,col:COL[i%COL.length],cur:pts[pts.length-1]||null,prev:pts[pts.length-2]||null,url:(m.links||{})[name]}});
   const latest=Math.max(0,...shops.filter(s=>s.cur).map(s=>T(s.cur[0])));
   shops.forEach(s=>{s.fresh=s.cur&&(latest-T(s.cur[0]))<=3*864e5});
