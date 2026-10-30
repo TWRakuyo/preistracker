@@ -1,6 +1,8 @@
 {
- "updated": "2026-10-30T10:26+00:00",
- "errors": [],
+ "updated": "2026-10-30T10:57+00:00",
+ "errors": [
+  "Samsung Odyssey G60SF / Amazon: manueller Preis fehlt in monitors.json"
+ ],
  "monitors": [
   {
    "id": "g60sf",
@@ -10,7 +12,8 @@
    "pin": true,
    "links": {
     "Samsung.de": "https://www.samsung.com/de/monitors/gaming/odyssey-oled-g6-g60sf-27-inch-500hz-oled-qhd-ls27fg602suxen/",
-    "Check24": "https://preisvergleich.check24.de/ul/gaming-monitore/1CU1CSNX6RC0F-samsung-odyssey-g60sf-27-zoll-oled-gaming-monitor-mit-2560-x-1440-pixeln-500-hz-003-ms-reaktionszeit-nvidia-g-sync-amd-freesync-premium-pro-glare-free.html"
+    "Check24": "https://preisvergleich.check24.de/ul/gaming-monitore/1CU1CSNX6RC0F-samsung-odyssey-g60sf-27-zoll-oled-gaming-monitor-mit-2560-x-1440-pixeln-500-hz-003-ms-reaktionszeit-nvidia-g-sync-amd-freesync-premium-pro-glare-free.html",
+    "Amazon": "https://www.amazon.de/dp/B0FHJ1MM7V"
    }
   },
   {
