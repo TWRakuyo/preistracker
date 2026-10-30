@@ -2,6 +2,7 @@
 """Ruft die Preise aller Angebote in monitors.json ab und ergänzt data/prices.json.
 
 Preisquellen pro Seite, in dieser Reihenfolge:
+  0. optional "manual": fester Preis, von dir in monitors.json eingetragen
   1. optionaler CSS-Selektor ("selector") aus monitors.json
   2. schema.org-Daten (JSON-LD) mit offers.price
   3. Meta-Tags product:price:amount / og:price:amount
@@ -100,6 +101,11 @@ def price_from_meta(soup):
 
 
 def fetch_price(offer):
+    if "manual" in offer:  # fester Preis, den du selbst in monitors.json einträgst
+        price = to_float(offer["manual"])
+        if not price or price <= 0:
+            raise ValueError("manueller Preis fehlt in monitors.json")
+        return price
     url = offer["url"]
     if not allowed_by_robots(url):
         raise PermissionError("robots.txt verbietet den Abruf")
