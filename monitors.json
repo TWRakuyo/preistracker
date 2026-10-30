@@ -7,7 +7,8 @@
     "pin": true,
     "offers": [
       {"shop": "Samsung.de", "url": "https://www.samsung.com/de/monitors/gaming/odyssey-oled-g6-g60sf-27-inch-500hz-oled-qhd-ls27fg602suxen/"},
-      {"shop": "Check24", "url": "https://preisvergleich.check24.de/ul/gaming-monitore/1CU1CSNX6RC0F-samsung-odyssey-g60sf-27-zoll-oled-gaming-monitor-mit-2560-x-1440-pixeln-500-hz-003-ms-reaktionszeit-nvidia-g-sync-amd-freesync-premium-pro-glare-free.html"}
+      {"shop": "Check24", "url": "https://preisvergleich.check24.de/ul/gaming-monitore/1CU1CSNX6RC0F-samsung-odyssey-g60sf-27-zoll-oled-gaming-monitor-mit-2560-x-1440-pixeln-500-hz-003-ms-reaktionszeit-nvidia-g-sync-amd-freesync-premium-pro-glare-free.html"},
+      {"shop": "Amazon", "url": "https://www.amazon.de/dp/B0FHJ1MM7V", "manual": 0}
     ]
   },
   {
