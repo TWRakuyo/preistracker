@@ -1,8 +1,6 @@
 {
- "updated": "2026-10-30T10:57+00:00",
- "errors": [
-  "Samsung Odyssey G60SF / Amazon: manueller Preis fehlt in monitors.json"
- ],
+ "updated": "2026-10-30T10:59+00:00",
+ "errors": [],
  "monitors": [
   {
    "id": "g60sf",
@@ -58,6 +56,12 @@
      "2026-10-29",
      549.99
     ],
+    [
+     "2026-10-30",
+     549.99
+    ]
+   ],
+   "Amazon": [
     [
      "2026-10-30",
      549.99
