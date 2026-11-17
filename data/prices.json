@@ -1,8 +1,6 @@
 {
- "updated": "2026-11-16T20:22+00:00",
- "errors": [
-  "Samsung Odyssey G60SF / Check24: 403 Client Error: Forbidden for url: https://preisvergleich.check24.de/ul/gaming-monitore/1CU1CSNX6RC0F-samsung-odyssey-g60sf-27-zoll-oled-gaming-monitor-mit-2560-x-1440-pixeln-500-hz-003-ms-reaktionszeit-nvidia-g-sync-amd-freesync-premium-pro-glare-free.html"
- ],
+ "updated": "2026-11-17T14:30+00:00",
+ "errors": [],
  "monitors": [
   {
    "id": "g60sf",
@@ -118,6 +116,10 @@
     [
      "2026-11-16",
      539.0
+    ],
+    [
+     "2026-11-17",
+     539.0
     ]
    ],
    "Check24": [
@@ -195,6 +197,10 @@
     ],
     [
      "2026-11-16",
+     509.0
+    ],
+    [
+     "2026-11-17",
      509.0
     ]
    ],
@@ -286,6 +292,10 @@
     [
      "2026-11-16",
      699.0
+    ],
+    [
+     "2026-11-17",
+     699.0
     ]
    ]
   },
@@ -373,6 +383,10 @@
     ],
     [
      "2026-11-16",
+     655.9
+    ],
+    [
+     "2026-11-17",
      655.9
     ]
    ]
