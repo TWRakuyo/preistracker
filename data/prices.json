@@ -1,6 +1,8 @@
 {
- "updated": "2026-11-22T13:25+00:00",
- "errors": [],
+ "updated": "2026-11-22T17:47+00:00",
+ "errors": [
+  "Samsung Odyssey G60SF / Samsung.de: 403 Client Error: Forbidden for url: https://www.samsung.com/de/monitors/gaming/odyssey-oled-g6-g60sf-27-inch-500hz-oled-qhd-ls27fg602suxen/"
+ ],
  "monitors": [
   {
    "id": "g60sf",
